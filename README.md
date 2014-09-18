@@ -4,14 +4,23 @@ TexturedSolidGeneration - DisCODe Component Library
 Description
 -----------
 
-Fill this section with description of this library.
+Library containing components for generation of point clouds of simple textured solids such as cuboids or cylinders.
 
 Dependencies
 ------------
 
-Put here any dependencies of this library (other DCLs, third party libraries etc)
+DCL depends on the following libraries:
+- PCL (point clouds, data types etc.)
+
+DCL depends on the following DCLs:
+- PCLCoreTypes
+
+- CvCoreTypes 
+
 
 Maintainer
 ----------
 
-Provide any information about yourself
+- [Michał Laszkowski](https://github.com/mlaszko)
+
+- [Tomasz Kornuta](https://github.com/tkornuta)
