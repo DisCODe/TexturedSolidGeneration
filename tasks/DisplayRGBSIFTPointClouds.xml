@@ -1,0 +1,56 @@
+<Task>
+	<!-- reference task information -->
+	<Reference>
+		<Author>
+			<name>Michał Laszkowski</name>
+			<link></link>
+		</Author>
+		
+		<Description>
+                        <brief>Read XYZRGB and XYZSIFT clouds</brief>
+                        <full></full>
+		</Description>
+	</Reference>
+	
+	<!-- task definition -->
+	<Subtasks>
+		<Subtask name="Main">
+			<Executor name="Processing"  period="1">
+                                <Component name="Trigger" type="CvBasic:Trigger" priority="1" bump="0">
+                                        <param name="">1</param>
+                                </Component>
+                                <Component name="ReaderXYZRGB" type="PCL:PCDReader" priority="2" bump="0">
+                                        <param name="filename">/home/discode/cuboids/models/loyd_kinect_xyzrgb.pcd</param>
+                                </Component>
+                                <Component name="ReaderXYZSIFT" type="PCL:PCDReader" priority="3" bump="0">
+                                        <param name="filename">/home/discode/cuboids/models/loyd_kinect_xyzsift.pcd</param>
+                                </Component>
+			</Executor>
+
+			<Executor name="Visualization" period="1">
+                                <Component name="WindowPCL" type="SIFTObjectModel:CloudViewer" priority="1" bump="0">
+<!--                                    <param name="coordinate_system">false</param>-->
+				</Component>
+			</Executor>
+		</Subtask>	
+	
+	</Subtasks>
+	
+	<!-- pipes connecting datastreams -->
+	<DataStreams>
+                <Source name="Trigger.out_trigger">
+                        <sink>ReaderXYZRGB.in_trigger</sink>
+                        <sink>ReaderXYZSIFT.in_trigger</sink>
+                </Source>
+                <Source name="ReaderXYZRGB.out_cloud_xyzrgb">
+                        <sink>WindowPCL.in_cloud_xyzrgb</sink>
+                </Source>
+                <Source name="ReaderXYZSIFT.out_cloud_xyzsift">
+                        <sink>WindowPCL.in_cloud_xyzsift</sink>
+                </Source>
+	</DataStreams>
+</Task>
+
+
+
+
