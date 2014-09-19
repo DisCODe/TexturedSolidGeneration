@@ -28,7 +28,7 @@
 			</Executor>
 
 			<Executor name="Visualization" period="1">
-                                <Component name="WindowPCL" type="SIFTObjectModel:CloudViewer" priority="1" bump="0">
+                                <Component name="WindowPCL" type="PCL:CloudViewer" priority="1" bump="0">
 <!--                                    <param name="coordinate_system">false</param>-->
 				</Component>
 			</Executor>
