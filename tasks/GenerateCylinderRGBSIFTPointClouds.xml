@@ -22,11 +22,9 @@
                                 <Component name="Trigger" type="CvBasic:Trigger" priority="2" bump="0">
                                         <param name="">1</param>
                                 </Component>
-                                <Component name="WriterXYZRGB" type="PCL:PCDWriter" priority="3" bump="0">
-                                        <param name="filename">/home/mlaszkow/test/cuboid_xyzrgb.pcd</param>
-                                </Component>
-                                <Component name="WriterXYZSIFT" type="PCL:PCDWriter" priority="4" bump="0">
-                                        <param name="filename">/home/mlaszkow/test/cuboid_xyzsift.pcd</param>
+                                <Component name="Writer" type="PCL:PCDWriter" priority="3" bump="0">
+                                        <param name="suffix">1</param>
+                                        <param name="filename">/home/mlaszkow/test/cuboid</param>
                                 </Component>
 			</Executor>
 
@@ -45,16 +43,15 @@
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
                 <Source name="Generator.out_cloud_xyzrgb">
-                        <sink>WriterXYZRGB.in_cloud_xyzrgb</sink>
+                        <sink>Writer.in_cloud_xyzrgb</sink>
                         <sink>WindowPCL.in_cloud_xyzrgb</sink>
                 </Source>
                 <Source name="Generator.out_cloud_xyzsift">
-                        <sink>WriterXYZSIFT.in_cloud_xyzsift</sink>
+                        <sink>Writer.in_cloud_xyzsift</sink>
                         <sink>WindowPCL.in_cloud_xyzsift</sink>
                 </Source>
                 <Source name="Trigger.out_trigger">
-                        <sink>WriterXYZRGB.in_trigger_xyzrgb</sink>
-                        <sink>WriterXYZSIFT.in_trigger_xyzsift</sink>
+                        <sink>Writer.in_trigger</sink>
                 </Source>
 	</DataStreams>
 </Task>
