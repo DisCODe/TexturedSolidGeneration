@@ -176,8 +176,8 @@ void CylinderModelGenerator::generateModel() {
             for(float j=0; j<w; j+=step){
                 // Get image coordinates.
                 pcl::PointXYZRGB point;
-                int v = 0 + (j-0)*(side.cols-1-0)/(w-1-0);
-                int u = 0 + (i-0)*(side.rows-1-0)/(h-1-0);
+                int v = 0 + (w-j-0)*(side.cols-1-0)/(w-1-0);
+                int u = 0 + (h-i-0)*(side.rows-1-0)/(h-1-0);
                 if (mask_side && side_mask.at<float>(v, u)==0) {
                         continue;
                 }
@@ -187,7 +187,7 @@ void CylinderModelGenerator::generateModel() {
                 point.g = bgr[1];
                 point.b = bgr[0];
                 // Compute cylindric parameters.
-                float z = h-i;
+                float z = i;
                 float fi = -j*360/(w-1);
                 // Set cartesian coordinates of the cylinder side.
                 point.x = float(r) * cos(fi * M_PI /180.0) /1000;
@@ -264,13 +264,13 @@ void CylinderModelGenerator::generateModel() {
         for(int i=0; i < features.features.size(); i++){
             PointXYZSIFT point;
             // Get image coordinates.
-            float u = features.features[i].pt.x;
-            float v = features.features[i].pt.y;
+            float u = side.cols - features.features[i].pt.x;
+            float v = side.rows - features.features[i].pt.y;
             if (mask_side && side_mask.at<float>(int(v), int(u))==0) {
                     continue;
             }
             // Compute cylindric parameters.
-            float z = h-(v*h/side.rows);
+            float z = v*h/side.rows;
             float fi = -(u*w/side.cols)*360/(w-1);
             // Set cartesian coordinates of the cylinder side.
             point.x = float(r) * cos(fi * M_PI /180.0) /1000;
