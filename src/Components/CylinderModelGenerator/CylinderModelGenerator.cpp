@@ -187,7 +187,7 @@ void CylinderModelGenerator::generateModel() {
                 point.g = bgr[1];
                 point.b = bgr[0];
                 // Compute cylindric parameters.
-                float z = i;
+                float z = h-i;
                 float fi = -j*360/(w-1);
                 // Set cartesian coordinates of the cylinder side.
                 point.x = float(r) * cos(fi * M_PI /180.0) /1000;
@@ -270,7 +270,7 @@ void CylinderModelGenerator::generateModel() {
                     continue;
             }
             // Compute cylindric parameters.
-            float z = v*h/side.rows;
+            float z = h-(v*h/side.rows);
             float fi = -(u*w/side.cols)*360/(w-1);
             // Set cartesian coordinates of the cylinder side.
             point.x = float(r) * cos(fi * M_PI /180.0) /1000;
