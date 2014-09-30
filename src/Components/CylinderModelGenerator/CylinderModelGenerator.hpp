@@ -86,7 +86,7 @@ protected:
     /// JSON file containing geometric properties of the cuboid and list of files with textures.
     Base::Property<std::string> dataJSONname;
 
-    Base::Property<float> step;
+    Base::Property<float> resolution;
 
     Base::Property<bool> generate_on_init;
 	

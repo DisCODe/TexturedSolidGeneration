@@ -104,7 +104,7 @@ protected:
 
     Base::Property<bool> generate_on_init;
 
-    Base::Property<float> step;
+    Base::Property<float> resolution;
 
     /// Function responsible for generation of SOM cuboid model.
     void generateModel();

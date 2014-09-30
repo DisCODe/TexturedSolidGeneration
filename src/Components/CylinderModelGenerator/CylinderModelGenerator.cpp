@@ -32,10 +32,10 @@ namespace CylinderModelGenerator {
 CylinderModelGenerator::CylinderModelGenerator(const std::string & name) :
 		Base::Component(name) , 
         dataJSONname("dataJSONname", std::string("./")),
-        step("step", 1.0),
+        resolution("resolution", 1.0),
         generate_on_init("generate_on_init", true){
 	registerProperty(dataJSONname);
-    registerProperty(step);
+    registerProperty(resolution);
     registerProperty(generate_on_init);
     generateModel_flag = generate_on_init;
 
@@ -81,12 +81,12 @@ bool CylinderModelGenerator::onStart() {
 void CylinderModelGenerator::sift(cv::Mat input, cv::Mat &descriptors, Types::Features &features) {
     CLOG(LTRACE) << "CylinderModelGenerator::sift";
     try {
-        //-- Step 1: Detect the keypoints.
+        //-- resolution 1: Detect the keypoints.
         cv::SiftFeatureDetector detector;
         std::vector<cv::KeyPoint> keypoints;
         detector.detect(input, keypoints);
 
-        //-- Step 2: Calculate descriptors (feature vectors).
+        //-- resolution 2: Calculate descriptors (feature vectors).
         cv::SiftDescriptorExtractor extractor;
         extractor.compute( input, keypoints, descriptors);
 
@@ -172,8 +172,8 @@ void CylinderModelGenerator::generateModel() {
 
     //side
     if(generate_side){
-        for (float i=0; i<h; i+=step){
-            for(float j=0; j<w; j+=step){
+        for (float i=0; i<h; i+=resolution){
+            for(float j=0; j<w; j+=resolution){
                 // Get image coordinates.
                 pcl::PointXYZRGB point;
                 int v = 0 + (w-j-0)*(side.cols-1-0)/(w-1-0);
@@ -200,8 +200,8 @@ void CylinderModelGenerator::generateModel() {
     }
     //top
     if(generate_top){
-        for (float i=0; i<2*r; i+=step){
-            for(float j=0; j<2*r; j+=step){
+        for (float i=0; i<2*r; i+=resolution){
+            for(float j=0; j<2*r; j+=resolution){
                 if(sqrt(abs(i-r)*abs(i-r)+abs(j-r)*abs(j-r)) > r)
                     continue;
                 // Get image coordinates.
@@ -227,8 +227,8 @@ void CylinderModelGenerator::generateModel() {
     }
     //bottom
     if(generate_bottom){
-        for (float i=0; i<2*r; i+=step){
-            for(float j=0; j<2*r; j+=step){
+        for (float i=0; i<2*r; i+=resolution){
+            for(float j=0; j<2*r; j+=resolution){
                 if(sqrt(abs(i-r)*abs(i-r)+abs(j-r)*abs(j-r)) > r)
                     continue;
                 // Get image coordinates.

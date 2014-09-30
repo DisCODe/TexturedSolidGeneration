@@ -32,10 +32,10 @@ CuboidModelGenerator::CuboidModelGenerator(const std::string & name) :
 		Base::Component(name) , 
         dataJSONname("dataJSONname", std::string("./")),
         generate_on_init("generate_on_init", true),
-        step("step", 1.0){
+        resolution("resolution", 1.0){
     registerProperty(dataJSONname);
     registerProperty(generate_on_init);
-    registerProperty(step);
+    registerProperty(resolution);
     generateModel_flag = generate_on_init;
 }
 
@@ -80,12 +80,12 @@ bool CuboidModelGenerator::onStart() {
 void CuboidModelGenerator::sift(cv::Mat input, cv::Mat &descriptors, Types::Features &features) {
     CLOG(LTRACE) << "CuboidModelGenerator::sift";
     try {
-        //-- Step 1: Detect the keypoints.
+        //-- resolution 1: Detect the keypoints.
         cv::SiftFeatureDetector detector;
         std::vector<cv::KeyPoint> keypoints;
         detector.detect(input, keypoints);
 
-        //-- Step 2: Calculate descriptors (feature vectors).
+        //-- resolution 2: Calculate descriptors (feature vectors).
         cv::SiftDescriptorExtractor extractor;
         extractor.compute( input, keypoints, descriptors);
 
@@ -221,8 +221,8 @@ void CuboidModelGenerator::generateModel() {
     if(generate_front){
         y=0;//stałe
         CLOG(LTRACE) <<"front " << front.cols << " x " <<front.rows << endl;
-        for(x = 0; x < a; x+=step){
-            for(z = 0; z < c; z+=step){
+        for(x = 0; x < a; x+=resolution){
+            for(z = 0; z < c; z+=resolution){
                 pcl::PointXYZRGB point;
                 point.x = (float(a)-x)/1000;
                 point.y = y/1000;
@@ -246,8 +246,8 @@ void CuboidModelGenerator::generateModel() {
     if(generate_back){
         y=-b;//stale
         CLOG(LTRACE) <<"back " << back.cols << " x " <<back.rows << endl;
-        for(x = 0; x < a; x+=step){
-            for(z = 0; z < c; z+=step){
+        for(x = 0; x < a; x+=resolution){
+            for(z = 0; z < c; z+=resolution){
                 pcl::PointXYZRGB point;
                 point.x = x/1000;
                 point.y = y/1000;
@@ -269,8 +269,8 @@ void CuboidModelGenerator::generateModel() {
     if(generate_top){
         z= c;//stale
         CLOG(LTRACE) <<"top " << top.cols << " x " <<top.rows << endl;
-        for(x = 0; x < a; x+=step){
-            for(y = 0; y < b; y+=step){
+        for(x = 0; x < a; x+=resolution){
+            for(y = 0; y < b; y+=resolution){
                 pcl::PointXYZRGB point;
                 point.x = (float(a)-x)/1000;
                 point.y = (float(-b)+y)/1000;
@@ -292,8 +292,8 @@ void CuboidModelGenerator::generateModel() {
     if(generate_bottom){
         z= 0;//stale
         CLOG(LTRACE) <<"bottom " << bottom.cols << " x " <<bottom.rows << endl;
-        for(x = 0; x < a; x+=step){
-            for(y = 0; y < b; y+=step){
+        for(x = 0; x < a; x+=resolution){
+            for(y = 0; y < b; y+=resolution){
                 pcl::PointXYZRGB point;
                 point.x = x/1000;
                 point.y = (float(-b)+y)/1000;
@@ -315,8 +315,8 @@ void CuboidModelGenerator::generateModel() {
     if(generate_left){
         x= a;//stale
         CLOG(LTRACE) <<"left " << left.cols << " x " <<left.rows << endl;
-        for(y = 0; y < b; y+=step){
-            for(z = 0; z < c; z+=step){
+        for(y = 0; y < b; y+=resolution){
+            for(z = 0; z < c; z+=resolution){
                 pcl::PointXYZRGB point;
                 point.x = x/1000;
                 point.y = (float(-b)+y)/1000;
@@ -338,8 +338,8 @@ void CuboidModelGenerator::generateModel() {
     if(generate_right){
         x= 0;//stale
         CLOG(LTRACE) <<"right " << right.cols << " x " <<right.rows << endl;
-        for(y = 0; y < b; y+=step){
-            for(z = 0; z < c; z+=step){
+        for(y = 0; y < b; y+=resolution){
+            for(z = 0; z < c; z+=resolution){
                 pcl::PointXYZRGB point;
                 point.x = x/1000;
                 point.y = -y/1000;
