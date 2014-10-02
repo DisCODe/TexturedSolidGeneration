@@ -122,12 +122,12 @@ void CuboidModelGenerator::loadData(){
         bottom_name = ptree_file.get("bottom","");
         front_name = ptree_file.get("front","");
         back_name = ptree_file.get("back","");
-        left_mask_name = ptree_file.get("left","");
-        right_mask_name = ptree_file.get("right","");
-        top_mask_name = ptree_file.get("top","");
-        bottom_mask_name = ptree_file.get("bottom","");
-        front_mask_name = ptree_file.get("front","");
-        back_mask_name = ptree_file.get("back","");
+        left_mask_name = ptree_file.get("left_mask","");
+        right_mask_name = ptree_file.get("right_mask","");
+        top_mask_name = ptree_file.get("top_mask","");
+        bottom_mask_name = ptree_file.get("bottom_mask","");
+        front_mask_name = ptree_file.get("front_mask","");
+        back_mask_name = ptree_file.get("back_mask","");
 
         a = ptree_file.get<int>("a");
         b = ptree_file.get<int>("b");
