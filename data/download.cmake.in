@@ -1,0 +1,12 @@
+MESSAGE("Downloading datasets...")
+
+# Find DisCODe installation
+FIND_PACKAGE(DisCODe REQUIRED COMPONENTS Macros)
+
+# Use CMake macros provided with DisCODe
+set(CMAKE_MODULE_PATH ${DisCODe_DIR} ${CMAKE_MODULE_PATH})
+include(DisCODeMacros)
+
+
+GET_DATASET(@PROJECT_SOURCE_DIR@/data lipton_green_tea_citrus)
+

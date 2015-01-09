@@ -141,7 +141,7 @@ protected:
     cv::Mat back_mask;
 
     /// Sizes of the cuboid.
-    int a,b,c;
+    int width,depth,height;
 
     /// Flag indicating that the user pressed the generateModelButton
     bool generateModel_flag;
