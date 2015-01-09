@@ -21,6 +21,8 @@
 #endif
 #endif
 
+// Maximal size of a single side cloud.
+#define max_cloud_size 10000000
 
 using boost::property_tree::ptree;
 using boost::property_tree::read_json;
@@ -133,7 +135,7 @@ void CuboidModelGenerator::loadData(){
         dir = dirnameOf(dataJSONname);
         if (dir!="")
         	dir = dir + "/";
-        cout<< dir <<endl;
+        //cout<< dir <<endl;
         // Read JSON properties.
         model_name = ptree_file.get("name","");
         left_name = ptree_file.get("left","");
@@ -159,7 +161,7 @@ void CuboidModelGenerator::loadData(){
     }//: catch
     try{
     if(left_name!=""){
-    	cout<< (std::string)(dir + left_name) <<endl;
+    	//cout<< (std::string)(dir + left_name) <<endl;
         left = cv::imread((std::string)(dir + left_name), CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
         generate_left = true;
     }
@@ -243,312 +245,438 @@ void CuboidModelGenerator::generateModel() {
     cloud_xyzrgb->clear();
     cloud_xyzsift->clear();
 
-    // Create image with reduced (rescaled) dimensions.
-    cv::Mat front_reduced((int)(width/resolution), (int)(height/resolution));
+    // Check desired size of point cloud.
+    int front_size = width*resolution * height*resolution;
+    int bottom_size = width*resolution * depth*resolution;
+    int side_size = depth*resolution * height*resolution;
+    CLOG(LNOTICE) <<"size of clouds: front=" << front_size << " bottom=" << bottom_size << "side=" << side_size;
+    if ((front_size > max_cloud_size) || (bottom_size > max_cloud_size) || (side_size > max_cloud_size)) {
+    	CLOG(LERROR) << "Maximal cloud size (10000000 points) exceeded";
+    	return;
+    }
 
-    float x,y,z;
-    //front
+#if 1
+    //******************************************************************************************
+    // FRONT side of cuboid.
     if(generate_front){
-        y=0;//stałe
-        CLOG(LTRACE) <<"front " << front.cols << " x " <<front.rows << endl;
-        for(x = 0; x < width; x+=resolution){
-            for(z = 0; z < height; z+=resolution){
-                pcl::PointXYZRGB point;
-                point.x = (float(width)-x)/1000;
-                point.y = y/1000;
-                point.z = (float(height)-z)/1000;
-                //pozycja w obrazie
-                int xx = (x)*(front.cols)/(width);
-                int zz = (z)*(front.rows)/(height);
-                if (mask_front && front_mask.at<float>(zz,xx)==0) {
-                        continue;
-                }
+        // Create image with reduced (rescaled) dimensions.
+        cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(height*resolution)), CV_8UC3);
+
+        CLOG(LTRACE) <<"FRONT " << front.cols << " x " <<front.rows << endl;
+
+        // Generate side on XZ plane.
+        for(float x = 0; x < width*resolution; x+=1){
+            for(float z = 0; z < height*resolution; z+=1){
+                // Compute image coordinates.
+                int xx = (x/resolution)*(front.cols)/(width);
+                int zz = (z/resolution)*(front.rows)/(height);
+                // Get colour of the original image point.
                 cv::Vec3b bgr = front.at<cv::Vec3b>(zz, xx);
+
+                // Set colour of the rescaled image point.
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<z<<endl;
+                rescaled_texture.at<cv::Vec3b>(z, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
+
+                // Create point with cartesian coordinates.
+                // Skip points not lying under mask - if mask was loaded.
+                if (mask_front && front_mask.at<float>(zz,xx)==0)
+                        continue;
+                pcl::PointXYZRGB point;
+                // Set point cartesian coordinates.
+                point.x = (float(width)-x/resolution)/1000;
+                point.y = 0;
+                point.z = (float(height)-z/resolution)/1000;
+                // Set point colours.
                 point.r = bgr[2];
                 point.g = bgr[1];
                 point.b = bgr[0];
+                // Add point to cloud.
                 cloud_xyzrgb->push_back(point);
-            }
 
-        }
-    }
+            }// for z
+        }// for x
 
-#if 0
-//back
+        cv::Mat descriptors;
+		Types::Features features;
+		// Detect features in the rescaled image.
+		sift(rescaled_texture, descriptors, features);
+		CLOG(LTRACE) << "SIFT FRONT " << features.features.size() << endl;
+		// Iterate on detected features.
+		for (int i = 0; i < features.features.size(); i++) {
+            // Skip points not lying under mask - if mask was loaded - TODO!
+/*           int u = round(features.features[i].pt.x * (front.rows/height));
+			 int v = round(features.features[i].pt.y * (front.cols/width));
+			 if (mask_front && front_mask.at<float>(v, u)==0) {
+			 continue;
+			 }
+*/
+
+            // Create SIFT point with cartesian coordinates.
+			PointXYZSIFT point;
+			point.x = (float(width) - float(features.features[i].pt.x) / resolution) / 1000;
+			point.y = 0;
+			point.z = (float(height) - float(features.features[i].pt.y) / resolution) / 1000;
+			// Copy descriptor.
+			for (int j = 0; j < descriptors.cols; j++) {
+				point.descriptor[j] = descriptors.row(i).at<float>(j);
+			}
+			point.multiplicity = 1;
+			// Add point to cloud.
+			cloud_xyzsift->push_back(point);
+        }// for
+    }// if FRONT
+#endif
+
+#if 1
+    //******************************************************************************************
+    // BACK side of cuboid.
     if(generate_back){
-        y=-depth;//stale
-        CLOG(LTRACE) <<"back " << back.cols << " x " <<back.rows << endl;
-        for(x = 0; x < width; x+=resolution){
-            for(z = 0; z < height; z+=resolution){
-                pcl::PointXYZRGB point;
-                point.x = x/1000;
-                point.y = y/1000;
-                point.z = (float(height)-z)/1000;
-                int xx = x*(back.cols)/(width);
-                int zz = z*(back.rows)/(height);
-                if (mask_back && back_mask.at<float>(zz, xx)==0) {
-                        continue;
-                }
+        // Create image with reduced (rescaled) dimensions.
+        cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(height*resolution)), CV_8UC3);
+
+        CLOG(LTRACE) <<"BACK " << back.cols << " x " <<back.rows << endl;
+
+        // Generate side on XZ plane.
+        for(float x = 0; x < width*resolution; x+=1){
+            for(float z = 0; z < height*resolution; z+=1){
+                // Compute image coordinates.
+                int xx = (x/resolution)*(back.cols)/(width);
+                int zz = (z/resolution)*(back.rows)/(height);
+
+                // Get colour of the original image point.
                 cv::Vec3b bgr = back.at<cv::Vec3b>(zz, xx);
+
+                // Set colour of the rescaled image point.
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<z<<endl;
+                rescaled_texture.at<cv::Vec3b>(z, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
+
+                // Create point with cartesian coordinates.
+                // Skip points not lying under mask - if mask was loaded.
+                if (mask_back && back_mask.at<float>(zz,xx)==0)
+                        continue;
+                pcl::PointXYZRGB point;
+                // Set point cartesian coordinates.
+                point.x = (x/resolution)/1000;
+                point.y = -float(depth)/1000;
+                point.z = (float(height)-z/resolution)/1000;
+                // Set point colours.
                 point.r = bgr[2];
                 point.g = bgr[1];
                 point.b = bgr[0];
+                // Add point to cloud.
                 cloud_xyzrgb->push_back(point);
-            }
-        }
-    }
-    //top
+
+            }// for z
+        }// for x
+
+        cv::Mat descriptors;
+		Types::Features features;
+		// Detect features in the rescaled image.
+		sift(rescaled_texture, descriptors, features);
+		CLOG(LTRACE) << "SIFT BACK " << features.features.size() << endl;
+		// Iterate on detected features.
+		for (int i = 0; i < features.features.size(); i++) {
+            // Skip points not lying under mask - if mask was loaded - TODO!
+			// ...
+
+            // Create SIFT point with cartesian coordinates.
+			PointXYZSIFT point;
+            point.x = (float(features.features[i].pt.x)/resolution)/1000;
+            point.y = -float(depth)/1000;
+            point.z = (float(height) - float(features.features[i].pt.y)/resolution)/1000;
+
+			// Copy descriptor.
+			for (int j = 0; j < descriptors.cols; j++) {
+				point.descriptor[j] = descriptors.row(i).at<float>(j);
+			}
+			point.multiplicity = 1;
+			// Add point to cloud.
+			cloud_xyzsift->push_back(point);
+        }// for
+    }// if BACK
+
+#endif
+
+#if 1
+    //******************************************************************************************
+    // TOP side of cuboid.
     if(generate_top){
-        z= height;//stale
-        CLOG(LTRACE) <<"top " << top.cols << " x " <<top.rows << endl;
-        for(x = 0; x < width; x+=resolution){
-            for(y = 0; y < depth; y+=resolution){
-                pcl::PointXYZRGB point;
-                point.x = (float(width)-x)/1000;
-                point.y = (float(-depth)+y)/1000;
-                point.z = z/1000;
-                int xx = (x)*(top.cols)/(width);
-                int yy = (y)*(top.rows)/(depth);
-                if (mask_top && top_mask.at<float>(yy, xx)==0) {
-                        continue;
-                }
+        // Create image with reduced (rescaled) dimensions.
+        cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(depth*resolution)), CV_8UC3);
+
+        CLOG(LTRACE) <<"TOP " << top.cols << " x " <<top.rows << endl;
+
+        // Generate side on XZ plane.
+        for(float x = 0; x < width*resolution; x+=1){
+            for(float y = 0; y < depth*resolution; y+=1){
+                // Compute image coordinates.
+                int xx = (x/resolution)*(top.cols)/(width);
+                int yy = (y/resolution)*(top.rows)/(depth);
+
+                // Get colour of the original image point.
                 cv::Vec3b bgr = top.at<cv::Vec3b>(yy, xx);
+
+                // Set colour of the rescaled image point.
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<y<<endl;
+                rescaled_texture.at<cv::Vec3b>(y, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
+
+                // Create point with cartesian coordinates.
+                // Skip points not lying under mask - if mask was loaded.
+                if (mask_top && top_mask.at<float>(yy,xx)==0)
+                        continue;
+                pcl::PointXYZRGB point;
+                // Set point cartesian coordinates.
+                point.x = (float(width) - x/resolution)/1000;
+                point.y = (float(-depth) + y/resolution)/1000;
+                point.z = float(height)/1000;
+                // Set point colours.
                 point.r = bgr[2];
                 point.g = bgr[1];
                 point.b = bgr[0];
+                // Add point to cloud.
                 cloud_xyzrgb->push_back(point);
-            }
-        }
-    }
-    //bottom
+
+            }// for y
+        }// for x
+
+        cv::Mat descriptors;
+		Types::Features features;
+		// Detect features in the rescaled image.
+		sift(rescaled_texture, descriptors, features);
+		CLOG(LTRACE) << "SIFT TOP " << features.features.size() << endl;
+		// Iterate on detected features.
+		for (int i = 0; i < features.features.size(); i++) {
+            // Skip points not lying under mask - if mask was loaded - TODO!
+			// ...
+
+			// Create SIFT point with cartesian coordinates.
+			PointXYZSIFT point;
+            point.x = (float(width) - float(features.features[i].pt.x)/resolution)/1000;
+            point.y = (float(-depth) + float(features.features[i].pt.y)/resolution)/1000;
+            point.z = float(height)/1000;
+
+			// Copy descriptor.
+			for (int j = 0; j < descriptors.cols; j++) {
+				point.descriptor[j] = descriptors.row(i).at<float>(j);
+			}
+			point.multiplicity = 1;
+			// Add point to cloud.
+			cloud_xyzsift->push_back(point);
+        }// for
+    }// if TOP
+#endif
+
+#if 1
+    //******************************************************************************************
+    // BOTTOM side of cuboid.
     if(generate_bottom){
-        z= 0;//stale
-        CLOG(LTRACE) <<"bottom " << bottom.cols << " x " <<bottom.rows << endl;
-        for(x = 0; x < width; x+=resolution){
-            for(y = 0; y < depth; y+=resolution){
-                pcl::PointXYZRGB point;
-                //point.x = x/1000;
-                point.x = (float(width)-x)/1000;
-                point.y = (float(-depth)+y)/1000;
-                point.z = z/1000;
-                int xx = (x)*(bottom.cols)/(width);
-                int yy = (y)*(bottom.rows)/(depth);
-                if (mask_bottom && bottom_mask.at<float>(yy, xx)==0) {
-                        continue;
-                }
+        // Create image with reduced (rescaled) dimensions.
+        cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(depth*resolution)), CV_8UC3);
+
+        CLOG(LTRACE) <<"BOTTOM " << bottom.cols << " x " <<bottom.rows << endl;
+
+        // Generate side on XZ plane.
+        for(float x = 0; x < width*resolution; x+=1){
+            for(float y = 0; y < depth*resolution; y+=1){
+                // Compute image coordinates.
+                int xx = (x/resolution)*(bottom.cols)/(width);
+                int yy = (y/resolution)*(bottom.rows)/(depth);
+
+                // Get colour of the original image point.
                 cv::Vec3b bgr = bottom.at<cv::Vec3b>(yy, xx);
+
+                // Set colour of the rescaled image point.
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<y<<endl;
+                rescaled_texture.at<cv::Vec3b>(y, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
+
+                // Create point with cartesian coordinates.
+                // Skip points not lying under mask - if mask was loaded.
+                if (mask_bottom && bottom_mask.at<float>(yy,xx)==0)
+                        continue;
+
+                pcl::PointXYZRGB point;
+                // Set point cartesian coordinates.
+                point.x = (float(width) - x/resolution)/1000;
+                point.y = (float(-depth) + y/resolution)/1000;
+                point.z = 0;
+                // Set point colours.
                 point.r = bgr[2];
                 point.g = bgr[1];
                 point.b = bgr[0];
+                // Add point to cloud.
                 cloud_xyzrgb->push_back(point);
-            }
-        }
-    }
-    //left
+
+            }// for y
+        }// for x
+
+        cv::Mat descriptors;
+		Types::Features features;
+		// Detect features in the rescaled image.
+		sift(rescaled_texture, descriptors, features);
+		CLOG(LTRACE) << "SIFT BOTTOM " << features.features.size() << endl;
+		// Iterate on detected features.
+		for (int i = 0; i < features.features.size(); i++) {
+            // Skip points not lying under mask - if mask was loaded - TODO!
+			// ...
+
+            // Create SIFT point with cartesian coordinates.
+			PointXYZSIFT point;
+            point.x = (float(width) - float(features.features[i].pt.x)/resolution)/1000;
+            point.y = (float(-depth) + float(features.features[i].pt.y)/resolution)/1000;
+            point.z = 0;
+
+			// Copy descriptor.
+			for (int j = 0; j < descriptors.cols; j++) {
+				point.descriptor[j] = descriptors.row(i).at<float>(j);
+			}
+			point.multiplicity = 1;
+			// Add point to cloud.
+			cloud_xyzsift->push_back(point);
+        }// for
+    }// if BOTTOM
+#endif
+
+#if 1
+    //******************************************************************************************
+    // LEFT side of cuboid.
     if(generate_left){
-        x= width;//stale
-        CLOG(LTRACE) <<"left " << left.cols << " x " <<left.rows << endl;
-        for(y = 0; y < depth; y+=resolution){
-            for(z = 0; z < height; z+=resolution){
-                pcl::PointXYZRGB point;
-                point.x = x/1000;
-                point.y = (float(-depth)+y)/1000;
-                point.z = (float(height)-z)/1000;
-                int yy = (y)*(left.cols)/(depth);
-                int zz = (z)*(left.rows)/(height);
-                if (mask_left && left_mask.at<float>(zz, yy)==0) {
-                        continue;
-                }
+        // Create image with reduced (rescaled) dimensions.
+        cv::Mat rescaled_texture(cv::Size((int)(depth*resolution), (int)(height*resolution)), CV_8UC3);
+
+        CLOG(LTRACE) <<"LEFT " << left.cols << " x " <<left.rows << endl;
+
+        // Generate side on XZ plane.
+        for(float y = 0; y < depth*resolution; y+=1){
+            for(float z = 0; z < height*resolution; z+=1){
+                // Compute image coordinates.
+                int yy = (y/resolution)*(left.cols)/(depth);
+                int zz = (z/resolution)*(left.rows)/(height);
+
+                // Get colour of the original image point.
                 cv::Vec3b bgr = left.at<cv::Vec3b>(zz, yy);
+
+                // Set colour of the rescaled image point.
+                CLOG(LDEBUG)<<rescaled_texture.cols <<" x "<<rescaled_texture.rows<<" coord: "<<z<<","<<y<<endl;
+                rescaled_texture.at<cv::Vec3b>(z, y) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
+
+                // Create point with cartesian coordinates.
+                // Skip points not lying under mask - if mask was loaded.
+                if (mask_left && left_mask.at<float>(zz,yy)==0)
+                        continue;
+
+                pcl::PointXYZRGB point;
+                // Set point cartesian coordinates.
+                point.x = float(width)/1000;
+                point.y = (float(-depth) + y/resolution)/1000;
+                point.z = (float(height) - z/resolution)/1000;
+                // Set point colours.
                 point.r = bgr[2];
                 point.g = bgr[1];
                 point.b = bgr[0];
+                // Add point to cloud.
                 cloud_xyzrgb->push_back(point);
-            }
-        }
-    }
-    //right
+
+            }// for y
+        }// for x
+
+        cv::Mat descriptors;
+		Types::Features features;
+		// Detect features in the rescaled image.
+		sift(rescaled_texture, descriptors, features);
+		CLOG(LTRACE) << "SIFT LEFT " << features.features.size() << endl;
+		// Iterate on detected features.
+		for (int i = 0; i < features.features.size(); i++) {
+            // Skip points not lying under mask - if mask was loaded - TODO!
+			// ...
+
+            // Create SIFT point with cartesian coordinates.
+			PointXYZSIFT point;
+            point.x = float(width)/1000;
+            point.y = (float(-depth) + float(features.features[i].pt.x)/resolution)/1000;
+            point.z = (float(height) - float(features.features[i].pt.y)/resolution)/1000;
+
+			// Copy descriptor.
+			for (int j = 0; j < descriptors.cols; j++) {
+				point.descriptor[j] = descriptors.row(i).at<float>(j);
+			}
+			point.multiplicity = 1;
+			// Add point to cloud.
+			cloud_xyzsift->push_back(point);
+        }// for
+    }// if LEFT
+#endif
+
+
+#if 1
+    //******************************************************************************************
+    // RIGHT side of cuboid.
     if(generate_right){
-        x= 0;//stale
-        CLOG(LTRACE) <<"right " << right.cols << " x " <<right.rows << endl;
-        for(y = 0; y < depth; y+=resolution){
-            for(z = 0; z < height; z+=resolution){
-                pcl::PointXYZRGB point;
-                point.x = x/1000;
-                point.y = -y/1000;
-                point.z = (float(height)-z)/1000;
-                int yy = y*(right.cols)/(depth);
-                int zz = z*(right.rows)/(height);
-                if (mask_right && right_mask.at<float>(zz, yy)==0) {
-                        continue;
-                }
+        // Create image with reduced (rescaled) dimensions.
+        cv::Mat rescaled_texture(cv::Size((int)(depth*resolution), (int)(height*resolution)), CV_8UC3);
+
+        CLOG(LTRACE) <<"RIGHT " << right.cols << " x " <<right.rows << endl;
+
+        // Generate side on XZ plane.
+        for(float y = 0; y < depth*resolution; y+=1){
+            for(float z = 0; z < height*resolution; z+=1){
+                // Compute image coordinates.
+                int yy = (y/resolution)*(right.cols)/(depth);
+                int zz = (z/resolution)*(right.rows)/(height);
+
+                // Get colour of the original image point.
                 cv::Vec3b bgr = right.at<cv::Vec3b>(zz, yy);
 
+                // Set colour of the rescaled image point.
+                CLOG(LDEBUG)<<rescaled_texture.cols <<" x "<<rescaled_texture.rows<<" coord: "<<z<<","<<y<<endl;
+                rescaled_texture.at<cv::Vec3b>(z, y) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
+
+                // Create point with cartesian coordinates.
+                // Skip points not lying under mask - if mask was loaded.
+                if (mask_right && right_mask.at<float>(zz,yy)==0)
+                        continue;
+
+                pcl::PointXYZRGB point;
+                // Set point cartesian coordinates.
+                point.x = 0;
+                point.y = (- y/resolution)/1000;
+                point.z = (float(height) - z/resolution)/1000;
+                // Set point colours.
                 point.r = bgr[2];
                 point.g = bgr[1];
                 point.b = bgr[0];
+                // Add point to cloud.
                 cloud_xyzrgb->push_back(point);
-            }
-        }
-    }
+
+            }// for y
+        }// for x
+
+        cv::Mat descriptors;
+		Types::Features features;
+		// Detect features in the rescaled image.
+		sift(rescaled_texture, descriptors, features);
+		CLOG(LTRACE) << "SIFT RIGHT " << features.features.size() << endl;
+		// Iterate on detected features.
+		for (int i = 0; i < features.features.size(); i++) {
+            // Skip points not lying under mask - if mask was loaded - TODO!
+			// ...
+
+            // Create SIFT point with cartesian coordinates.
+			PointXYZSIFT point;
+            point.x = 0;
+            point.y = (- float(features.features[i].pt.x)/resolution)/1000;
+            point.z = (float(height) - float(features.features[i].pt.y)/resolution)/1000;
+
+			// Copy descriptor.
+			for (int j = 0; j < descriptors.cols; j++) {
+				point.descriptor[j] = descriptors.row(i).at<float>(j);
+			}
+			point.multiplicity = 1;
+			// Add point to cloud.
+			cloud_xyzsift->push_back(point);
+        }// for
+    }// if RIGHT
 #endif
-    //SIFT
-    cv::Mat descriptors;
-    Types::Features features;
-    //front
-    if(generate_front){
-        sift(front,descriptors,features);
-        CLOG(LTRACE)<<"SIFT front " << features.features.size() <<endl;
-        for(int i=0; i < features.features.size(); i++){
-            PointXYZSIFT point;
-            int u = round(features.features[i].pt.x);
-            int v = round(features.features[i].pt.y);
-            if (mask_front && front_mask.at<float>(v, u)==0) {
-                    continue;
-            }
 
-            int xx = (u)*(width)/(front.cols);
-            int zz = (v)*(height)/(front.rows);
-
-            point.x = float(width-xx)/1000;
-            point.y = float(0)/1000;
-            point.z = float(height-zz)/1000;
-            for(int j=0; j<descriptors.cols;j++){
-                point.descriptor[j] = descriptors.row(i).at<float>(j);
-            }
-            point.multiplicity = 1;
-            cloud_xyzsift->push_back(point);
-        }
-    }
-#if 0
-    //back
-    if(generate_back){
-        sift(back,descriptors,features);
-        CLOG(LTRACE)<<"SIFT back " << features.features.size() <<endl;
-        for(int i=0; i < features.features.size(); i++){
-            PointXYZSIFT point;
-            int u = round(features.features[i].pt.x);
-            int v = round(features.features[i].pt.y);
-            if (mask_back && back_mask.at<float>(v, u)==0) {
-                    continue;
-            }
-
-            int xx = (u)*(width)/(back.cols);
-            int zz = (v)*(height)/(back.rows);
-
-            point.x = float(xx)/1000;
-            point.y = float(-depth)/1000;
-            point.z = float(height-zz)/1000;
-            for(int j=0; j<descriptors.cols;j++){
-                point.descriptor[j] = descriptors.row(i).at<float>(j);
-            }
-            point.multiplicity = 1;
-            cloud_xyzsift->push_back(point);
-        }
-    }
-
-    //top
-    if(generate_top){
-        sift(top,descriptors,features);
-        CLOG(LTRACE)<<"SIFT top " << features.features.size() <<endl;
-        for(int i=0; i < features.features.size(); i++){
-            PointXYZSIFT point;
-            int u = round(features.features[i].pt.x);
-            int v = round(features.features[i].pt.y);
-            if (mask_top && top_mask.at<float>(v, u)==0) {
-                    continue;
-            }
-
-            int xx = (u)*(width)/(top.cols);
-            int yy = (v)*(depth)/(top.rows);
-
-            point.x = float(width-xx)/1000;
-            point.y = float(-depth+yy)/1000;
-            point.z = float(height)/1000;
-            for(int j=0; j<descriptors.cols;j++){
-                point.descriptor[j] = descriptors.row(i).at<float>(j);
-            }
-            point.multiplicity = 1;
-            cloud_xyzsift->push_back(point);
-        }
-    }
-    //bottom
-        if(generate_bottom){
-        sift(bottom,descriptors,features);
-        CLOG(LTRACE)<<"SIFT bottom " << features.features.size() <<endl;
-        for(int i=0; i < features.features.size(); i++){
-            PointXYZSIFT point;
-            int u = round(features.features[i].pt.x);
-            int v = round(features.features[i].pt.y);
-            if (mask_bottom && bottom_mask.at<float>(v, u)==0) {
-                    continue;
-            }
-
-            int xx = (u)*(width)/(bottom.cols);
-            int yy = (v)*(depth)/(bottom.rows);
-
-            point.x = float(xx)/1000;
-            point.y = float(-depth+yy)/1000;
-            point.z = float(0)/1000;
-            for(int j=0; j<descriptors.cols;j++){
-                point.descriptor[j] = descriptors.row(i).at<float>(j);
-            }
-            point.multiplicity = 1;
-            cloud_xyzsift->push_back(point);
-        }
-    }
-    //left
-    if(generate_left){
-        sift(left,descriptors,features);
-        CLOG(LTRACE)<<"SIFT left " << features.features.size() <<endl;
-        for(int i=0; i < features.features.size(); i++){
-            PointXYZSIFT point;
-            int u = round(features.features[i].pt.x);
-            int v = round(features.features[i].pt.y);
-            if (mask_left && left_mask.at<float>(v, u)==0) {
-                    continue;
-            }
-
-            int yy = (u)*(depth)/(left.cols);
-            int zz = (v)*(height)/(left.rows);
-
-            point.x = float(width)/1000;
-            point.y = float(-depth+yy)/1000;
-            point.z = float(height-zz)/1000;
-            for(int j=0; j<descriptors.cols;j++){
-                point.descriptor[j] = descriptors.row(i).at<float>(j);
-            }
-            point.multiplicity = 1;
-            cloud_xyzsift->push_back(point);
-        }
-    }
-    //right
-    if(generate_right){
-        sift(right,descriptors,features);
-        CLOG(LTRACE)<<"SIFT right " << features.features.size() <<endl;
-        for(int i=0; i < features.features.size(); i++){
-            PointXYZSIFT point;
-            int u = round(features.features[i].pt.x);
-            int v = round(features.features[i].pt.y);
-
-            int yy = (u)*(depth)/(right.cols);
-            int zz = (v)*(height)/(right.rows);
-            if (mask_right && right_mask.at<float>(v, u)==0) {
-                    continue;
-            }
-
-            point.x = float(0)/1000;
-            point.y = float(-yy)/1000;
-            point.z = float(height-zz)/1000;
-            for(int j=0; j<descriptors.cols;j++){
-                point.descriptor[j] = descriptors.row(i).at<float>(j);
-            }
-            point.multiplicity = 1;
-            cloud_xyzsift->push_back(point);
-        }
-    }
-
-#endif
 }
 
 

@@ -18,7 +18,7 @@
 			<Executor name="Processing"  period="1">
                 <Component name="Generator" type="TexturedSolidGeneration:CuboidModelGenerator" priority="1" bump="0">
                 	<param name="dataJSONname">%[TASK_LOCATION]%/../data/lipton_green_tea_citrus/model.json</param>
-                	<param name="resolution">0.1</param>
+                	<param name="resolution">1</param>
 				</Component>
 				<Component name="Writer" type="PCL:PCDWriter" priority="3" bump="0">
                 	<param name="suffix">1</param>
