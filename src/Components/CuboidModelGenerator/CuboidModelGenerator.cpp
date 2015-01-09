@@ -255,8 +255,8 @@ void CuboidModelGenerator::generateModel() {
                 point.y = y/1000;
                 point.z = (float(height)-z)/1000;
                 //pozycja w obrazie
-                int xx = 0 + (x-0)*(front.cols-1-0)/(width-1-0);
-                int zz = 0 + (z-0)*(front.rows-1-0)/(height-1-0);
+                int xx = (x)*(front.cols)/(width);
+                int zz = (z)*(front.rows)/(height);
                 if (mask_front && front_mask.at<float>(zz,xx)==0) {
                         continue;
                 }
@@ -269,7 +269,6 @@ void CuboidModelGenerator::generateModel() {
 
         }
     }
-#if 1
     //back
     if(generate_back){
         y=-depth;//stale
@@ -280,8 +279,8 @@ void CuboidModelGenerator::generateModel() {
                 point.x = x/1000;
                 point.y = y/1000;
                 point.z = (float(height)-z)/1000;
-                int xx = 0 + (x-0)*(back.cols-1-0)/(width-1-0);
-                int zz = 0 + (z-0)*(back.rows-1-0)/(height-1-0);
+                int xx = x*(back.cols)/(width);
+                int zz = z*(back.rows)/(height);
                 if (mask_back && back_mask.at<float>(zz, xx)==0) {
                         continue;
                 }
@@ -303,8 +302,8 @@ void CuboidModelGenerator::generateModel() {
                 point.x = (float(width)-x)/1000;
                 point.y = (float(-depth)+y)/1000;
                 point.z = z/1000;
-                int xx = 0 + (x-0)*(top.cols-1-0)/(width-1-0);
-                int yy = 0 + (y-0)*(top.rows-1-0)/(depth-1-0);
+                int xx = (x)*(top.cols)/(width);
+                int yy = (y)*(top.rows)/(depth);
                 if (mask_top && top_mask.at<float>(yy, xx)==0) {
                         continue;
                 }
@@ -327,8 +326,8 @@ void CuboidModelGenerator::generateModel() {
                 point.x = (float(width)-x)/1000;
                 point.y = (float(-depth)+y)/1000;
                 point.z = z/1000;
-                int xx = 0 + (x-0)*(bottom.cols-1-0)/(width-1-0);
-                int yy = 0 + (y-0)*(bottom.rows-1-0)/(depth-1-0);
+                int xx = (x)*(bottom.cols)/(width);
+                int yy = (y)*(bottom.rows)/(depth);
                 if (mask_bottom && bottom_mask.at<float>(yy, xx)==0) {
                         continue;
                 }
@@ -350,8 +349,8 @@ void CuboidModelGenerator::generateModel() {
                 point.x = x/1000;
                 point.y = (float(-depth)+y)/1000;
                 point.z = (float(height)-z)/1000;
-                int yy = 0 + (y-0)*(left.cols-1-0)/(depth-1-0);
-                int zz = 0 + (z-0)*(left.rows-1-0)/(height-1-0);
+                int yy = (y)*(left.cols)/(depth);
+                int zz = (z)*(left.rows)/(height);
                 if (mask_left && left_mask.at<float>(zz, yy)==0) {
                         continue;
                 }
@@ -373,8 +372,8 @@ void CuboidModelGenerator::generateModel() {
                 point.x = x/1000;
                 point.y = -y/1000;
                 point.z = (float(height)-z)/1000;
-                int yy = 0 + (y-0)*(right.cols-1-0)/(depth-1-0);
-                int zz = 0 + (z-0)*(right.rows-1-0)/(height-1-0);
+                int yy = y*(right.cols)/(depth);
+                int zz = z*(right.rows)/(height);
                 if (mask_right && right_mask.at<float>(zz, yy)==0) {
                         continue;
                 }
@@ -388,6 +387,7 @@ void CuboidModelGenerator::generateModel() {
         }
     }
 
+#if 0
     //SIFT
     cv::Mat descriptors;
     Types::Features features;
@@ -403,8 +403,8 @@ void CuboidModelGenerator::generateModel() {
                     continue;
             }
 
-            int xx = 0 + (u-0)*(width-1-0)/(front.cols-1-0);
-            int zz = 0 + (v-0)*(height-1-0)/(front.rows-1-0);
+            int xx = (u)*(width)/(front.cols);
+            int zz = (v)*(height)/(front.rows);
 
             point.x = float(width-xx)/1000;
             point.y = float(0)/1000;
@@ -428,8 +428,8 @@ void CuboidModelGenerator::generateModel() {
                     continue;
             }
 
-            int xx = 0 + (u-0)*(width-1-0)/(back.cols-1-0);
-            int zz = 0 + (v-0)*(height-1-0)/(back.rows-1-0);
+            int xx = (u)*(width)/(back.cols);
+            int zz = (v)*(height)/(back.rows);
 
             point.x = float(xx)/1000;
             point.y = float(-depth)/1000;
@@ -454,8 +454,8 @@ void CuboidModelGenerator::generateModel() {
                     continue;
             }
 
-            int xx = 0 + (u-0)*(width-1-0)/(top.cols-1-0);
-            int yy = 0 + (v-0)*(depth-1-0)/(top.rows-1-0);
+            int xx = (u)*(width)/(top.cols);
+            int yy = (v)*(depth)/(top.rows);
 
             point.x = float(width-xx)/1000;
             point.y = float(-depth+yy)/1000;
@@ -479,8 +479,8 @@ void CuboidModelGenerator::generateModel() {
                     continue;
             }
 
-            int xx = 0 + (u-0)*(width-1-0)/(bottom.cols-1-0);
-            int yy = 0 + (v-0)*(depth-1-0)/(bottom.rows-1-0);
+            int xx = (u)*(width)/(bottom.cols);
+            int yy = (v)*(depth)/(bottom.rows);
 
             point.x = float(xx)/1000;
             point.y = float(-depth+yy)/1000;
@@ -504,8 +504,8 @@ void CuboidModelGenerator::generateModel() {
                     continue;
             }
 
-            int yy = 0 + (u-0)*(depth-1-0)/(left.cols-1-0);
-            int zz = 0 + (v-0)*(height-1-0)/(left.rows-1-0);
+            int yy = (u)*(depth)/(left.cols);
+            int zz = (v)*(height)/(left.rows);
 
             point.x = float(width)/1000;
             point.y = float(-depth+yy)/1000;
@@ -526,8 +526,8 @@ void CuboidModelGenerator::generateModel() {
             int u = round(features.features[i].pt.x);
             int v = round(features.features[i].pt.y);
 
-            int yy = 0 + (u-0)*(depth-1-0)/(right.cols-1-0);
-            int zz = 0 + (v-0)*(height-1-0)/(right.rows-1-0);
+            int yy = (u)*(depth)/(right.cols);
+            int zz = (v)*(height)/(right.rows);
             if (mask_right && right_mask.at<float>(v, u)==0) {
                     continue;
             }
