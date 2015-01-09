@@ -22,7 +22,7 @@
 #endif
 
 // Maximal size of a single side cloud.
-#define max_cloud_size 10000000
+#define max_cloud_size 1000000
 
 using boost::property_tree::ptree;
 using boost::property_tree::read_json;
@@ -249,9 +249,9 @@ void CuboidModelGenerator::generateModel() {
     int front_size = width*resolution * height*resolution;
     int bottom_size = width*resolution * depth*resolution;
     int side_size = depth*resolution * height*resolution;
-    CLOG(LNOTICE) <<"size of clouds: front=" << front_size << " bottom=" << bottom_size << "side=" << side_size;
+    CLOG(LNOTICE) <<"Size of clouds: front=" << front_size << " bottom=" << bottom_size << "side=" << side_size;
     if ((front_size > max_cloud_size) || (bottom_size > max_cloud_size) || (side_size > max_cloud_size)) {
-    	CLOG(LERROR) << "Maximal cloud size (10000000 points) exceeded";
+    	CLOG(LERROR) << "Maximal size of a cloud of one cuboid side (10^6 points) exceeded";
     	return;
     }
 
@@ -593,7 +593,7 @@ void CuboidModelGenerator::generateModel() {
 			PointXYZSIFT point;
             point.x = float(width)/1000;
             point.y = (float(-depth) + float(features.features[i].pt.x)/resolution)/1000;
-            point.z = (float(height) - float(features.features[i].pt.y)/resolution)/1000;
+            point.z = (float(height) - float(f->eatures.features[i].pt.y)/resolution)/1000;
 
 			// Copy descriptor.
 			for (int j = 0; j < descriptors.cols; j++) {
@@ -676,6 +676,9 @@ void CuboidModelGenerator::generateModel() {
         }// for
     }// if RIGHT
 #endif
+
+    CLOG(LNOTICE) <<"Total size of point cloud of cuboid: " << cloud_xyzrgb->size();
+    CLOG(LNOTICE) <<"Total number of features: " << cloud_xyzsift->size();
 
 }
 
