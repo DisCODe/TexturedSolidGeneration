@@ -243,6 +243,9 @@ void CuboidModelGenerator::generateModel() {
     cloud_xyzrgb->clear();
     cloud_xyzsift->clear();
 
+    // Create image with reduced (rescaled) dimensions.
+    cv::Mat front_reduced((int)(width/resolution), (int)(height/resolution));
+
     float x,y,z;
     //front
     if(generate_front){
@@ -269,7 +272,9 @@ void CuboidModelGenerator::generateModel() {
 
         }
     }
-    //back
+
+#if 0
+//back
     if(generate_back){
         y=-depth;//stale
         CLOG(LTRACE) <<"back " << back.cols << " x " <<back.rows << endl;
@@ -386,8 +391,7 @@ void CuboidModelGenerator::generateModel() {
             }
         }
     }
-
-#if 0
+#endif
     //SIFT
     cv::Mat descriptors;
     Types::Features features;
@@ -416,6 +420,7 @@ void CuboidModelGenerator::generateModel() {
             cloud_xyzsift->push_back(point);
         }
     }
+#if 0
     //back
     if(generate_back){
         sift(back,descriptors,features);
