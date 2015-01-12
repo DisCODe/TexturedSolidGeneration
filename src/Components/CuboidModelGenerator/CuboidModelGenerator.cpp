@@ -593,7 +593,7 @@ void CuboidModelGenerator::generateModel() {
 			PointXYZSIFT point;
             point.x = float(width)/1000;
             point.y = (float(-depth) + float(features.features[i].pt.x)/resolution)/1000;
-            point.z = (float(height) - float(f->eatures.features[i].pt.y)/resolution)/1000;
+            point.z = (float(height) - float(features.features[i].pt.y)/resolution)/1000;
 
 			// Copy descriptor.
 			for (int j = 0; j < descriptors.cols; j++) {
