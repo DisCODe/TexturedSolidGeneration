@@ -34,7 +34,7 @@ CuboidModelGenerator::CuboidModelGenerator(const std::string & name) :
 		Base::Component(name) , 
         dataJSONname("dataJSONname", std::string("./")),
         generate_on_init("generate_on_init", true),
-        resolution("resolution", 1.0){
+        resolution("resolution", 1){
     registerProperty(dataJSONname);
     registerProperty(generate_on_init);
     registerProperty(resolution);
@@ -161,7 +161,6 @@ void CuboidModelGenerator::loadData(){
     }//: catch
     try{
     if(left_name!=""){
-    	//cout<< (std::string)(dir + left_name) <<endl;
         left = cv::imread((std::string)(dir + left_name), CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_ANYCOLOR);
         generate_left = true;
     }
@@ -262,9 +261,9 @@ void CuboidModelGenerator::generateModel() {
         // Create image with reduced (rescaled) dimensions.
         cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(height*resolution)), CV_8UC3);
 
-        CLOG(LTRACE) <<"FRONT " << front.cols << " x " <<front.rows << endl;
+        CLOG(LTRACE) <<"FRONT " << front.cols << " x " <<front.rows;
 
-        // Generate side on XZ plane.
+        // Generate side on XZ plane. (Y=0)
         for(float x = 0; x < width*resolution; x+=1){
             for(float z = 0; z < height*resolution; z+=1){
                 // Compute image coordinates.
@@ -274,7 +273,7 @@ void CuboidModelGenerator::generateModel() {
                 cv::Vec3b bgr = front.at<cv::Vec3b>(zz, xx);
 
                 // Set colour of the rescaled image point.
-                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<z<<endl;
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<z;
                 rescaled_texture.at<cv::Vec3b>(z, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
 
                 // Create point with cartesian coordinates.
@@ -296,11 +295,12 @@ void CuboidModelGenerator::generateModel() {
             }// for z
         }// for x
 
+
         cv::Mat descriptors;
 		Types::Features features;
 		// Detect features in the rescaled image.
 		sift(rescaled_texture, descriptors, features);
-		CLOG(LTRACE) << "SIFT FRONT " << features.features.size() << endl;
+        CLOG(LTRACE) << "SIFT FRONT " << features.features.size();
 		// Iterate on detected features.
 		for (int i = 0; i < features.features.size(); i++) {
             // Skip points not lying under mask - if mask was loaded - TODO!
@@ -334,9 +334,9 @@ void CuboidModelGenerator::generateModel() {
         // Create image with reduced (rescaled) dimensions.
         cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(height*resolution)), CV_8UC3);
 
-        CLOG(LTRACE) <<"BACK " << back.cols << " x " <<back.rows << endl;
+        CLOG(LTRACE) <<"BACK " << back.cols << " x " <<back.rows;
 
-        // Generate side on XZ plane.
+        // Generate side on Y=-depth plane.
         for(float x = 0; x < width*resolution; x+=1){
             for(float z = 0; z < height*resolution; z+=1){
                 // Compute image coordinates.
@@ -347,7 +347,7 @@ void CuboidModelGenerator::generateModel() {
                 cv::Vec3b bgr = back.at<cv::Vec3b>(zz, xx);
 
                 // Set colour of the rescaled image point.
-                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<z<<endl;
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<z;
                 rescaled_texture.at<cv::Vec3b>(z, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
 
                 // Create point with cartesian coordinates.
@@ -373,7 +373,7 @@ void CuboidModelGenerator::generateModel() {
 		Types::Features features;
 		// Detect features in the rescaled image.
 		sift(rescaled_texture, descriptors, features);
-		CLOG(LTRACE) << "SIFT BACK " << features.features.size() << endl;
+        CLOG(LTRACE) << "SIFT BACK " << features.features.size() ;
 		// Iterate on detected features.
 		for (int i = 0; i < features.features.size(); i++) {
             // Skip points not lying under mask - if mask was loaded - TODO!
@@ -404,9 +404,9 @@ void CuboidModelGenerator::generateModel() {
         // Create image with reduced (rescaled) dimensions.
         cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(depth*resolution)), CV_8UC3);
 
-        CLOG(LTRACE) <<"TOP " << top.cols << " x " <<top.rows << endl;
+        CLOG(LTRACE) <<"TOP " << top.cols << " x " <<top.rows ;
 
-        // Generate side on XZ plane.
+        // Generate side on Z=height plane.
         for(float x = 0; x < width*resolution; x+=1){
             for(float y = 0; y < depth*resolution; y+=1){
                 // Compute image coordinates.
@@ -417,7 +417,7 @@ void CuboidModelGenerator::generateModel() {
                 cv::Vec3b bgr = top.at<cv::Vec3b>(yy, xx);
 
                 // Set colour of the rescaled image point.
-                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<y<<endl;
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<y;
                 rescaled_texture.at<cv::Vec3b>(y, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
 
                 // Create point with cartesian coordinates.
@@ -443,7 +443,7 @@ void CuboidModelGenerator::generateModel() {
 		Types::Features features;
 		// Detect features in the rescaled image.
 		sift(rescaled_texture, descriptors, features);
-		CLOG(LTRACE) << "SIFT TOP " << features.features.size() << endl;
+        CLOG(LTRACE) << "SIFT TOP " << features.features.size();
 		// Iterate on detected features.
 		for (int i = 0; i < features.features.size(); i++) {
             // Skip points not lying under mask - if mask was loaded - TODO!
@@ -473,9 +473,9 @@ void CuboidModelGenerator::generateModel() {
         // Create image with reduced (rescaled) dimensions.
         cv::Mat rescaled_texture(cv::Size((int)(width*resolution), (int)(depth*resolution)), CV_8UC3);
 
-        CLOG(LTRACE) <<"BOTTOM " << bottom.cols << " x " <<bottom.rows << endl;
+        CLOG(LTRACE) <<"BOTTOM " << bottom.cols << " x " <<bottom.rows;
 
-        // Generate side on XZ plane.
+        // Generate side on XY plane. (Z=0)
         for(float x = 0; x < width*resolution; x+=1){
             for(float y = 0; y < depth*resolution; y+=1){
                 // Compute image coordinates.
@@ -486,7 +486,7 @@ void CuboidModelGenerator::generateModel() {
                 cv::Vec3b bgr = bottom.at<cv::Vec3b>(yy, xx);
 
                 // Set colour of the rescaled image point.
-                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<y<<endl;
+                CLOG(LDEBUG)<<rescaled_texture.rows <<" x "<<rescaled_texture.cols<<" coord: "<<x<<","<<y;
                 rescaled_texture.at<cv::Vec3b>(y, x) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
 
                 // Create point with cartesian coordinates.
@@ -497,7 +497,7 @@ void CuboidModelGenerator::generateModel() {
                 pcl::PointXYZRGB point;
                 // Set point cartesian coordinates.
                 point.x = (float(width) - x/resolution)/1000;
-                point.y = (float(-depth) + y/resolution)/1000;
+                point.y = (-y/resolution)/1000;
                 point.z = 0;
                 // Set point colours.
                 point.r = bgr[2];
@@ -513,7 +513,7 @@ void CuboidModelGenerator::generateModel() {
 		Types::Features features;
 		// Detect features in the rescaled image.
 		sift(rescaled_texture, descriptors, features);
-		CLOG(LTRACE) << "SIFT BOTTOM " << features.features.size() << endl;
+        CLOG(LTRACE) << "SIFT BOTTOM " << features.features.size();
 		// Iterate on detected features.
 		for (int i = 0; i < features.features.size(); i++) {
             // Skip points not lying under mask - if mask was loaded - TODO!
@@ -522,7 +522,7 @@ void CuboidModelGenerator::generateModel() {
             // Create SIFT point with cartesian coordinates.
 			PointXYZSIFT point;
             point.x = (float(width) - float(features.features[i].pt.x)/resolution)/1000;
-            point.y = (float(-depth) + float(features.features[i].pt.y)/resolution)/1000;
+            point.y = (-float(features.features[i].pt.y)/resolution)/1000;
             point.z = 0;
 
 			// Copy descriptor.
@@ -543,9 +543,9 @@ void CuboidModelGenerator::generateModel() {
         // Create image with reduced (rescaled) dimensions.
         cv::Mat rescaled_texture(cv::Size((int)(depth*resolution), (int)(height*resolution)), CV_8UC3);
 
-        CLOG(LTRACE) <<"LEFT " << left.cols << " x " <<left.rows << endl;
+        CLOG(LTRACE) <<"LEFT " << left.cols << " x " <<left.rows;
 
-        // Generate side on XZ plane.
+        // Generate side on X=width plane.
         for(float y = 0; y < depth*resolution; y+=1){
             for(float z = 0; z < height*resolution; z+=1){
                 // Compute image coordinates.
@@ -556,7 +556,7 @@ void CuboidModelGenerator::generateModel() {
                 cv::Vec3b bgr = left.at<cv::Vec3b>(zz, yy);
 
                 // Set colour of the rescaled image point.
-                CLOG(LDEBUG)<<rescaled_texture.cols <<" x "<<rescaled_texture.rows<<" coord: "<<z<<","<<y<<endl;
+                CLOG(LDEBUG)<<rescaled_texture.cols <<" x "<<rescaled_texture.rows<<" coord: "<<z<<","<<y;
                 rescaled_texture.at<cv::Vec3b>(z, y) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
 
                 // Create point with cartesian coordinates.
@@ -583,7 +583,7 @@ void CuboidModelGenerator::generateModel() {
 		Types::Features features;
 		// Detect features in the rescaled image.
 		sift(rescaled_texture, descriptors, features);
-		CLOG(LTRACE) << "SIFT LEFT " << features.features.size() << endl;
+        CLOG(LTRACE) << "SIFT LEFT " << features.features.size();
 		// Iterate on detected features.
 		for (int i = 0; i < features.features.size(); i++) {
             // Skip points not lying under mask - if mask was loaded - TODO!
@@ -614,9 +614,9 @@ void CuboidModelGenerator::generateModel() {
         // Create image with reduced (rescaled) dimensions.
         cv::Mat rescaled_texture(cv::Size((int)(depth*resolution), (int)(height*resolution)), CV_8UC3);
 
-        CLOG(LTRACE) <<"RIGHT " << right.cols << " x " <<right.rows << endl;
+        CLOG(LTRACE) <<"RIGHT " << right.cols << " x " <<right.rows;
 
-        // Generate side on XZ plane.
+        // Generate side on YZ plane. (X=0)
         for(float y = 0; y < depth*resolution; y+=1){
             for(float z = 0; z < height*resolution; z+=1){
                 // Compute image coordinates.
@@ -627,7 +627,7 @@ void CuboidModelGenerator::generateModel() {
                 cv::Vec3b bgr = right.at<cv::Vec3b>(zz, yy);
 
                 // Set colour of the rescaled image point.
-                CLOG(LDEBUG)<<rescaled_texture.cols <<" x "<<rescaled_texture.rows<<" coord: "<<z<<","<<y<<endl;
+                CLOG(LDEBUG)<<rescaled_texture.cols <<" x "<<rescaled_texture.rows<<" coord: "<<z<<","<<y;
                 rescaled_texture.at<cv::Vec3b>(z, y) = cv::Vec3b(bgr[0], bgr[1], bgr[2]);
 
                 // Create point with cartesian coordinates.
@@ -654,7 +654,7 @@ void CuboidModelGenerator::generateModel() {
 		Types::Features features;
 		// Detect features in the rescaled image.
 		sift(rescaled_texture, descriptors, features);
-		CLOG(LTRACE) << "SIFT RIGHT " << features.features.size() << endl;
+        CLOG(LTRACE) << "SIFT RIGHT " << features.features.size();
 		// Iterate on detected features.
 		for (int i = 0; i < features.features.size(); i++) {
             // Skip points not lying under mask - if mask was loaded - TODO!
