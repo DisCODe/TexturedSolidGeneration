@@ -46,44 +46,6 @@
 					<param name="depth_mode">point_cloud</param>
 				</Component>
 
-				<Component name="DetectCircles" type="CvBasic:CvFindCirclesGrid" priority="6">
-					<param name="grid.width">3</param>
-					<param name="grid.height">5</param>
-					<param name="grid.size">0.06</param>
-				</Component>
-				
-				<Component name="DetectCirclesInv" type="CvBasic:CvFindCirclesGrid" priority="7">
-					<param name="grid.width">3</param>
-					<param name="grid.height">5</param>
-					<param name="grid.size">0.06</param>
-					<param name="image.inverse">1</param>
-				</Component>
-				<Component name="SolvePNP" type="CvBasic:CvSolvePnP" priority="8">
-					<param name="offset.x">0.075</param>
-					<param name="offset.y">0.233</param>
-					<param name="offset.roll">3.14159265359</param>
-				</Component>
-				<Component name="SolvePNPinv" type="CvBasic:CvSolvePnP" priority="9">
-					<param name="offset.x">0.075</param>
-					<param name="offset.y">-0.113</param>
-					<param name="offset.roll">3.14159265359</param>
-				</Component>
-				<Component name="SolveLocation" type="CvBasic:CalcObjectLocation" priority="10" bump="0">
-				</Component>
-				<Component name="Draw" type="CvBasic:DrawCoordinateSystem" priority="11">
-				</Component>
-				<Component name="DepthTransform" type="CvStereo:DepthTransform" priority="18" bump="-2">
-				</Component>
-
-				<Component name="CubicMaskExtractor" type="ModelViewAcquisition:CubicMaskExtractor" priority="19" bump="0">
-					<param name="BlueAxis(X).X_Max">0.15</param>
-					<param name="BlueAxis(X).X_Min">-0.15</param>
-					<param name="GreenAxis(Y).Y_Max">0.3</param>
-					<param name="GreenAxis(Y).Y_Min">-0.3</param>
-					<param name="RedAxis(Z).Z_Max">0.6</param>
-					<param name="RedAxis(Z).Z_Min">0.03</param>
-				</Component>
-
 				<Component name="RGBDM2PCConverter" type="PCL:DepthConverter" priority="20" bump="0">
 				</Component>
 
@@ -91,8 +53,8 @@
 				</Component>
 
 				<Component name="Window" type="CvBasic:CvWindow" priority="30" bump="0">
-					<param name="count">2</param>
-					<param name="title">Board Pose, test</param>
+					<param name="count">1</param>
+					<param name="title">rainbow</param>
 				</Component>
 
 
@@ -125,65 +87,22 @@
 	
 		<Source name="RGBSequence.out_img">
 			<sink>RGBDM2PCConverter.in_rgb_stereo</sink>
-			<sink>DetectCircles.in_img</sink>
-			<sink>DetectCirclesInv.in_img</sink>
-			<sink>Window.in_img0</sink>	
 		</Source>		
 		<Source name="CameraInfo.out_camera_info">
 <!--			<sink>D2XYZConverter.in_camera_info</sink>  ZAPISANE NA SZTYWNO! -->
-<!--			<sink>RGBDM2PCConverter.in_camera_info</sink>	-->
-			<sink>SolvePNP.in_camerainfo</sink>
-			<sink>SolvePNPinv.in_camerainfo</sink>
-			<sink>Draw.in_camera_matrix</sink>
-		</Source>
-
-		<Source name="DetectCircles.out_pattern">
-			<sink>Window.in_draw0</sink>
-			<sink>SolvePNP.in_object3d</sink>		
-		</Source>
-		<Source name="DetectCirclesInv.out_pattern">
-			<sink>Window.in_draw0</sink>	
-			<sink>SolvePNPinv.in_object3d</sink>	
-		</Source>
-
-		<Source name = "SolvePNPinv.out_homogMatrix">
-			
-			<sink>SolveLocation.in_homogMatrix</sink>
-		</Source>
-		<Source name= "SolvePNP.out_homogMatrix">
-			
-			<sink>SolveLocation.in_homogMatrix</sink>
-		</Source>
-		<Source name= "SolveLocation.out_homogMatrix">
-			<sink>Draw.in_homogMatrix</sink>
-			<sink>DepthTransform.in_homogMatrix</sink>
-		</Source>
-
-		<Source name="Draw.out_csystem">
-			<sink>Window.in_draw0</sink>		
 		</Source>
 
 		<Source name="D2XYZConverter.out_img">
-		  	<sink>DepthTransform.in_image_xyz</sink>
+			<sink>RGBDM2PCConverter.in_depth_xyz</sink>
 			<sink>XYZ2RainbowTransformed.in_depth_xyz</sink>
  		</Source>
-
-		<Source name="DepthTransform.out_image_xyz">
-			<sink>CubicMaskExtractor.in_image_xyz</sink>
-			<sink>RGBDM2PCConverter.in_depth_xyz</sink>
-		</Source>
-
-
-		<Source name="CubicMaskExtractor.out_mask">
-			<sink>RGBDM2PCConverter.in_mask</sink>
-		 </Source>
 
 		<Source name="RGBDM2PCConverter.out_cloud_xyzrgb">
 			<sink>Viewer.in_cloud_xyzrgb</sink>		
 		</Source>
 
 		<Source name="XYZ2RainbowTransformed.out_depth_rainbow">
-			<sink>Window.in_img1</sink>
+			<sink>Window.in_img0</sink>
 		</Source>
 
 	</DataStreams>
