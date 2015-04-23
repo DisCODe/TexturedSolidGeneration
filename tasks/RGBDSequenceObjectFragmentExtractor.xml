@@ -91,12 +91,10 @@
 				</Component>
 
 				<Component name="Window" type="CvBasic:CvWindow" priority="30" bump="0">
-					<param name="count">2</param>
-					<param name="title">Board Pose, test</param>
+					<param name="count">1</param>
+					<param name="title">Board Pose</param>
 				</Component>
 
-
-				
 			</Executor>
 		</Subtask>
 		
@@ -130,8 +128,8 @@
 			<sink>Window.in_img0</sink>	
 		</Source>		
 		<Source name="CameraInfo.out_camera_info">
-<!--			<sink>D2XYZConverter.in_camera_info</sink>  ZAPISANE NA SZTYWNO! -->
-<!--			<sink>RGBDM2PCConverter.in_camera_info</sink>	-->
+			<sink>D2XYZConverter.in_camera_info</sink>
+<!--			<sink>RGBDM2PCConverter.in_camera_info</sink>	NIEPOTRZEBNE! -->
 			<sink>SolvePNP.in_camerainfo</sink>
 			<sink>SolvePNPinv.in_camerainfo</sink>
 			<sink>Draw.in_camera_matrix</sink>
@@ -147,12 +145,12 @@
 		</Source>
 
 		<Source name = "SolvePNPinv.out_homogMatrix">
-			
 			<sink>SolveLocation.in_homogMatrix</sink>
+<!--			<sink>DepthTransform.in_homogMatrix</sink>-->
 		</Source>
 		<Source name= "SolvePNP.out_homogMatrix">
-			
 			<sink>SolveLocation.in_homogMatrix</sink>
+<!--			<sink>DepthTransform.in_homogMatrix</sink>-->
 		</Source>
 		<Source name= "SolveLocation.out_homogMatrix">
 			<sink>Draw.in_homogMatrix</sink>
@@ -165,7 +163,7 @@
 
 		<Source name="D2XYZConverter.out_img">
 		  	<sink>DepthTransform.in_image_xyz</sink>
-			<sink>XYZ2RainbowTransformed.in_depth_xyz</sink>
+<!--			<sink>XYZ2RainbowTransformed.in_depth_xyz</sink>-->
  		</Source>
 
 		<Source name="DepthTransform.out_image_xyz">
@@ -183,7 +181,7 @@
 		</Source>
 
 		<Source name="XYZ2RainbowTransformed.out_depth_rainbow">
-			<sink>Window.in_img1</sink>
+<!--			<sink>Window.in_img1</sink>-->
 		</Source>
 
 	</DataStreams>
