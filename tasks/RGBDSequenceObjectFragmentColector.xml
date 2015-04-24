@@ -22,7 +22,7 @@
 <!--------------------------------------------------------------------------------------------------------------------->
 
 				<Component name="Trigger" type="CvBasic:Trigger" priority="1" bump="0">
-                                        <param name="auto_trigger">1</param>
+                                        <param name="auto_trigger">0</param>
 				</Component>
 
 				<Component name="RGBSequence" type="CvBasic:Sequence" priority="2" bump="0">
@@ -116,7 +116,12 @@
 				<Component name="InitialTransformation" type="CvCoreTypes:HomogenousMatrixProvider" priority="30" bump="0">
 				</Component>
 
-				<Component name="PairwiseRegistration" type="PCL:PairwiseRegistration" priority="31" bump="0">
+				<Component name="PairwiseRegistration" type="PCL:PairwiseRegistration" priority="31" bump="1">
+					<param name="Mode.ICP">1</param>
+					<param name="ICP.MaxCorrespondenceDistance">0.0001</param>
+					<param name="ICP.MaximumIterations">2000</param>
+					<param name="ICP.TransformationEpsilon">1e-8</param>
+					<param name="ICP.EuclideanFitnessEpsilon">0.1</param>
 				</Component>
 
 				<Component name="CloudStorage" type="PCL:CloudStorage" priority="32" bump="0">
@@ -140,6 +145,24 @@
 	
 	</Subtasks>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
@@ -149,7 +172,7 @@
 		<Source name="Trigger.out_trigger">
 			<sink>RGBSequence.in_next_image_trigger</sink>
 			<sink>DepthSequence.in_next_image_trigger</sink>
-			<sink>CloudStorage.in_add_cloud_trigger</sink>
+<!--			<sink>CloudStorage.in_add_cloud_trigger</sink>-->
 		</Source>
 
 		<Source name="DepthSequence.out_img">
