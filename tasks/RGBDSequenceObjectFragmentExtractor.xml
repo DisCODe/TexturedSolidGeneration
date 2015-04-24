@@ -90,6 +90,10 @@
 				<Component name="XYZ2RainbowTransformed" type="CvStereo:DepthRainbow" priority="25" bump="0">
 				</Component>
 
+				<Component name="MLSSmoothing" type="PCL:MLSSmoothing" priority="21" bump="0">
+				</Component>
+
+
 				<Component name="Window" type="CvBasic:CvWindow" priority="30" bump="0">
 					<param name="count">1</param>
 					<param name="title">Board Pose</param>
@@ -177,6 +181,11 @@
 		 </Source>
 
 		<Source name="RGBDM2PCConverter.out_cloud_xyzrgb">
+			<sink>MLSSmoothing.in_cloud_xyzrgb</sink>
+<!--			<sink>Viewer.in_cloud_xyzrgb</sink>-->
+		</Source>
+
+		<Source name="MLSSmoothing.out_cloud_xyzrgb">
 			<sink>Viewer.in_cloud_xyzrgb</sink>		
 		</Source>
 
