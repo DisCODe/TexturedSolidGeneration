@@ -26,18 +26,21 @@
 				</Component>
 
 				<Component name="RGBSequence" type="CvBasic:Sequence" priority="2" bump="0">
-					<param name="sequence.directory">/home/mlaszkow/DCL/ecovi/data/ahmad/</param> 
-<!--					<param name="sequence.directory">%[TASK_LOCATION]%/../data/rgbd_mieta/</param> -->
+<!--					<param name="sequence.directory">/home/mlaszkow/DCL/ecovi/data/ahmad/</param> -->
+					<param name="sequence.directory">%[TASK_LOCATION]%/../data/rgbd_mieta/</param> 
 					<param name="sequence.pattern">.*_rgb.png</param>
                                         <param name="mode.loop">1</param>
                                         <param name="mode.auto_next_image">0</param>
+<!--                                        <param name="mode.auto_streaming">0</param>-->
 				</Component>
 
 				<Component name="DepthSequence" type="CvBasic:Sequence" priority="3" bump="0">
-					<param name="sequence.directory">/home/mlaszkow/DCL/ecovi/data/ahmad/</param> 
+<!--					<param name="sequence.directory">/home/mlaszkow/DCL/ecovi/data/ahmad/</param> -->
+					<param name="sequence.directory">%[TASK_LOCATION]%/../data/rgbd_mieta/</param> 
 					<param name="sequence.pattern">.*_depth.png</param>
                                         <param name="mode.loop">1</param>
                                         <param name="mode.auto_next_image">0</param>
+<!--                                        <param name="mode.auto_streaming">0</param>-->
 				</Component>
 
 				<Component name="CameraInfo" type="CvCoreTypes:CameraInfoProvider" priority="4">
@@ -91,23 +94,29 @@
 				<Component name="DepthTransform" type="CvStereo:DepthTransform" priority="20" bump="-2">
 				</Component>
 
-				<Component name="CubicMaskExtractor" type="ModelViewAcquisition:CubicMaskExtractor" priority="21" bump="0">
+				<Component name="BoardExtractor" type="ModelViewAcquisition:CubicMaskExtractor" priority="21" bump="0">
 					<param name="BlueAxis(X).X_Max">0.15</param>
 					<param name="BlueAxis(X).X_Min">-0.15</param>
 					<param name="GreenAxis(Y).Y_Max">0.25</param>
 					<param name="GreenAxis(Y).Y_Min">-0.25</param>
 					<param name="RedAxis(Z).Z_Max">0.6</param>
-					<param name="RedAxis(Z).Z_Min">0.02</param>
+					<param name="RedAxis(Z).Z_Min">0.01</param>
 				</Component>
 
-				<Component name="RGBDM2PCConverter" type="PCL:DepthConverter" priority="22" bump="0">
+				<Component name="RGBXYZM2PCConverter" type="PCL:DepthConverter" priority="22" bump="0">
 				</Component>
 
 				<Component name="XYZ2RainbowTransformed" type="CvStereo:DepthRainbow" priority="23" bump="0">
 				</Component>
 
-<!--				<Component name="MLSSmoothing" type="PCL:MLSSmoothing" priority="21" bump="0">
+<!--				<Component name="MLSSmoothing" type="PCL:MLSSmoothing" priority="24" bump="0">
 				</Component>-->
+
+				<Component name="StatisticalOutlierRemoval" type="PCL:StatisticalOutlierRemoval" priority="24" bump="0">
+					<param name="MeanK">100</param>
+					<param name="StddevMulThresh">0.001</param>
+				</Component>
+				
 
 <!--------------------------------------------------------------------------------------------------------------------->
 <!--                              Registration
@@ -117,11 +126,12 @@
 				</Component>
 
 				<Component name="PairwiseRegistration" type="PCL:PairwiseRegistration" priority="31" bump="1">
-					<param name="Mode.ICP">1</param>
-					<param name="ICP.MaxCorrespondenceDistance">0.0001</param>
-					<param name="ICP.MaximumIterations">2000</param>
-					<param name="ICP.TransformationEpsilon">1e-8</param>
-					<param name="ICP.EuclideanFitnessEpsilon">0.1</param>
+					<param name="Mode.ICP">0</param>
+					<param name="ICP.UseColour">0</param>
+					<param name="ICP.MaxCorrespondenceDistance">0.05</param>
+					<param name="ICP.MaximumIterations">50</param>
+					<param name="ICP.TransformationEpsilon">1e-10</param>
+					<param name="ICP.EuclideanFitnessEpsilon">0.001</param>
 				</Component>
 
 				<Component name="CloudStorage" type="PCL:CloudStorage" priority="32" bump="0">
@@ -131,6 +141,10 @@
 					<param name="count">1</param>
 					<param name="title">Board Pose</param>
 				</Component>
+
+<!--				<Component name="Viewer" type="PCL:CloudViewer" priority="101" bump="0">
+					<param name="title">Point cloud readed from RGB-D file</param>
+				</Component>-->
 
 			</Executor>
 		</Subtask>
@@ -172,23 +186,26 @@
 		<Source name="Trigger.out_trigger">
 			<sink>RGBSequence.in_next_image_trigger</sink>
 			<sink>DepthSequence.in_next_image_trigger</sink>
-<!--			<sink>CloudStorage.in_add_cloud_trigger</sink>-->
+<!--			<sink>RGBSequence.in_stream_trigger</sink>
+			<sink>DepthSequence.in_stream_trigger</sink>-->
+			<sink>PairwiseRegistration.in_store_previous_cloud_trigger</sink>
+			<sink>CloudStorage.in_add_cloud_trigger</sink>
 		</Source>
 
 		<Source name="DepthSequence.out_img">
  			<sink>D2XYZConverter.in_depth</sink>
-<!--			<sink>RGBDM2PCConverter.in_depth</sink>	-->
+<!--			<sink>RGBXYZM2PCConverter.in_depth</sink>	-->
 		</Source>	
 	
 		<Source name="RGBSequence.out_img">
-			<sink>RGBDM2PCConverter.in_color</sink>
+			<sink>RGBXYZM2PCConverter.in_color</sink>
 			<sink>DetectCircles.in_img</sink>
 			<sink>DetectCirclesInv.in_img</sink>
 			<sink>Window.in_img0</sink>	
 		</Source>		
 		<Source name="CameraInfo.out_camera_info">
 			<sink>D2XYZConverter.in_camera_info</sink>
-<!--			<sink>RGBDM2PCConverter.in_camera_info</sink>	NIEPOTRZEBNE! -->
+<!--			<sink>RGBXYZM2PCConverter.in_camera_info</sink>	NIEPOTRZEBNE! -->
 			<sink>SolvePNP.in_camerainfo</sink>
 			<sink>SolvePNPinv.in_camerainfo</sink>
 			<sink>Draw.in_camera_matrix</sink>
@@ -238,16 +255,21 @@
 <!--------------------------------------------------------------------------------------------------------------------->
 
 		<Source name="DepthTransform.out_image_xyz">
-			<sink>CubicMaskExtractor.in_image_xyz</sink>
-			<sink>RGBDM2PCConverter.in_depth_xyz</sink>
+			<sink>BoardExtractor.in_image_xyz</sink>
+			<sink>RGBXYZM2PCConverter.in_depth_xyz</sink>
 		</Source>
 
 
-		<Source name="CubicMaskExtractor.out_mask">
-			<sink>RGBDM2PCConverter.in_mask</sink>
+		<Source name="BoardExtractor.out_mask">
+			<sink>RGBXYZM2PCConverter.in_mask</sink>
 		 </Source>
 
-		<Source name="RGBDM2PCConverter.out_cloud_xyzrgb">
+		<Source name="RGBXYZM2PCConverter.out_cloud_xyzrgb">
+			<sink>StatisticalOutlierRemoval.in_cloud_xyzrgb</sink>
+
+		</Source>
+
+		<Source name="StatisticalOutlierRemoval.out_cloud_xyzrgb">
 <!--			<sink>MLSSmoothing.in_cloud_xyzrgb</sink>-->
 <!--			<sink>Viewer.in_cloud_xyzrgb</sink>-->
 			<sink>PairwiseRegistration.in_cloud_xyzrgb</sink>
