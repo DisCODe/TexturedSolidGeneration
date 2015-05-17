@@ -84,9 +84,6 @@
 				<Component name="SolveLocation" type="CvBasic:CalcObjectLocation" priority="14" bump="0">
 				</Component>
 
-				<Component name="Draw" type="CvBasic:DrawCoordinateSystem" priority="15">
-				</Component>
-
 <!--------------------------------------------------------------------------------------------------------------------->
 <!--                              Extraction of fragment of cloud constituting the object
 <!--------------------------------------------------------------------------------------------------------------------->
@@ -113,7 +110,7 @@
 				</Component>-->
 
 				<Component name="StatisticalOutlierRemoval" type="PCL:StatisticalOutlierRemoval" priority="24" bump="0">
-					<param name="MeanK">100</param>
+					<param name="MeanK">1000</param>
 					<param name="StddevMulThresh">0.001</param>
 				</Component>
 				
@@ -126,23 +123,34 @@
 				</Component>
 
 				<Component name="PairwiseRegistration" type="PCL:PairwiseRegistration" priority="31" bump="1">
-					<param name="Mode.ICP">0</param>
+					<param name="Mode.ICP">1</param>
 					<param name="ICP.UseColour">0</param>
-					<param name="ICP.MaxCorrespondenceDistance">0.05</param>
+					<param name="ICP.UseNormals">0</param>
+					<param name="ICP.MaxCorrespondenceDistance">0.01</param>
 					<param name="ICP.MaximumIterations">50</param>
-					<param name="ICP.TransformationEpsilon">1e-10</param>
-					<param name="ICP.EuclideanFitnessEpsilon">0.001</param>
+					<param name="ICP.EuclideanFitnessEpsilon">0.1</param>
+					<param name="ICP.TransformationEpsilon">1e-20</param>
 				</Component>
 
 				<Component name="CloudStorage" type="PCL:CloudStorage" priority="32" bump="0">
 				</Component>
 
-				<Component name="Window" type="CvBasic:CvWindow" priority="100" bump="0">
+
+<!--------------------------------------------------------------------------------------------------------------------->
+<!--                              Visualization
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<!--				<Component name="Draw" type="CvBasic:DrawCoordinateSystem" priority="100">
+				</Component>-->
+
+
+<!--				<Component name="Window" type="CvBasic:CvWindow" priority="101" bump="0">
 					<param name="count">1</param>
 					<param name="title">Board Pose</param>
-				</Component>
+				</Component>-->
 
-<!--				<Component name="Viewer" type="PCL:CloudViewer" priority="101" bump="0">
+
+<!--				<Component name="Viewer" type="PCL:CloudViewer" priority="102" bump="0">
 					<param name="title">Point cloud readed from RGB-D file</param>
 				</Component>-->
 
@@ -152,7 +160,8 @@
 		<Subtask name="Visualisation">
 			<Executor name="Exec2" period="0.2">
 				<Component name="Viewer" type="PCL:CloudViewer" priority="1" bump="0">
-					<param name="title">Point cloud readed from RGB-D file</param>
+					<param name="title">Model point cloud</param>
+                                        <param name="coordinate_system">0</param>
 				</Component>
 			</Executor>
 		</Subtask>	
@@ -201,14 +210,14 @@
 			<sink>RGBXYZM2PCConverter.in_color</sink>
 			<sink>DetectCircles.in_img</sink>
 			<sink>DetectCirclesInv.in_img</sink>
-			<sink>Window.in_img0</sink>	
+<!--			<sink>Window.in_img0</sink> DRAW-->	
 		</Source>		
 		<Source name="CameraInfo.out_camera_info">
 			<sink>D2XYZConverter.in_camera_info</sink>
 <!--			<sink>RGBXYZM2PCConverter.in_camera_info</sink>	NIEPOTRZEBNE! -->
 			<sink>SolvePNP.in_camerainfo</sink>
 			<sink>SolvePNPinv.in_camerainfo</sink>
-			<sink>Draw.in_camera_matrix</sink>
+<!--			<sink>Draw.in_camera_matrix</sink> DRAW-->
 		</Source>
 
 		<Source name="D2XYZConverter.out_img">
@@ -217,7 +226,7 @@
  		</Source>
 
 		<Source name="XYZ2RainbowTransformed.out_depth_rainbow">
-<!--			<sink>Window.in_img1</sink>-->
+<!--			<sink>Window.in_img1</sink> DRAW-->
 		</Source>
 
 <!--------------------------------------------------------------------------------------------------------------------->
@@ -225,11 +234,11 @@
 <!--------------------------------------------------------------------------------------------------------------------->
 
 		<Source name="DetectCircles.out_pattern">
-			<sink>Window.in_draw0</sink>
+<!--			<sink>Window.in_draw0</sink> DRAW-->
 			<sink>SolvePNP.in_object3d</sink>		
 		</Source>
 		<Source name="DetectCirclesInv.out_pattern">
-			<sink>Window.in_draw0</sink>	
+<!--			<sink>Window.in_draw0</sink>  DRAW-->
 			<sink>SolvePNPinv.in_object3d</sink>	
 		</Source>
 
@@ -242,13 +251,13 @@
 <!--			<sink>DepthTransform.in_homogMatrix</sink>-->
 		</Source>
 		<Source name= "SolveLocation.out_homogMatrix">
-			<sink>Draw.in_homogMatrix</sink>
+<!--			<sink>Draw.in_homogMatrix</sink> DRAW-->
 			<sink>DepthTransform.in_homogMatrix</sink>
 		</Source>
 
-		<Source name="Draw.out_csystem">
+<!--		<Source name="Draw.out_csystem">
 			<sink>Window.in_draw0</sink>		
-		</Source>
+		</Source> DRAW-->
 
 <!--------------------------------------------------------------------------------------------------------------------->
 <!--                              Extraction of fragment of cloud constituting the object
